@@ -1,0 +1,430 @@
+<title>Alerta IRA Ayacucho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Concepto: "sala situacional" de epidemiología — franja de estado arriba, muro de gráficos abajo. */
+:root {
+  --bg: #eef1f5; --surface: #ffffff; --ink: #16202c; --muted: #5a6677; --line: #d9dfe7;
+  --accent: #4338ca; --accent-soft: rgba(67,56,202,.16); --real: #1b2a3c;
+  --ok: #1f8a55; --warn: #c98f00; --crit: #c93232;
+  --z-exito: rgba(31,138,85,.07); --z-seg: rgba(31,138,85,.17); --z-alarma: rgba(201,143,0,.20); --z-epi: rgba(201,50,50,.10);
+  --housing: #1d232b; --chip: #e7ebf1;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e131a; --surface: #161d26; --ink: #e6ebf1; --muted: #93a0b1; --line: #29323f;
+  --accent: #9a9cff; --accent-soft: rgba(154,156,255,.20); --real: #dce5ef;
+  --ok: #3cbf7d; --warn: #f0b429; --crit: #ff6b6b;
+  --z-exito: rgba(60,191,125,.06); --z-seg: rgba(60,191,125,.14); --z-alarma: rgba(240,180,41,.16); --z-epi: rgba(255,107,107,.10);
+  --housing: #0a0d11; --chip: #212a36; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e131a; --surface: #161d26; --ink: #e6ebf1; --muted: #93a0b1; --line: #29323f;
+  --accent: #9a9cff; --accent-soft: rgba(154,156,255,.20); --real: #dce5ef;
+  --ok: #3cbf7d; --warn: #f0b429; --crit: #ff6b6b;
+  --z-exito: rgba(60,191,125,.06); --z-seg: rgba(60,191,125,.14); --z-alarma: rgba(240,180,41,.16); --z-epi: rgba(255,107,107,.10);
+  --housing: #0a0d11; --chip: #212a36; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 32px); padding-block: 20px 48px; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.7rem, 3.6vw, 2.5rem); line-height: 1.05; }
+h2 { font-size: 1.45rem; }
+.eyebrow { font-family: var(--f-mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.mono { font-family: var(--f-mono); }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Cabecera */
+header.top { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: end; justify-content: space-between; border-bottom: 2px solid var(--ink); padding-bottom: 14px; }
+header.top .sub { margin-top: 6px; color: var(--muted); max-width: 70ch; }
+.fuente { font-family: var(--f-mono); font-size: .78rem; color: var(--muted); text-align: right; }
+.fuente b { color: var(--ink); font-weight: 500; }
+
+/* Controles */
+.controles { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.ctl { display: grid; gap: 5px; min-width: 0; }
+.ctl label, .ctl .lbl { font-family: var(--f-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+select, button { font: inherit; color: var(--ink); }
+select { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 230px; max-width: 100%; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 8px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.sim { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; flex: 1 1 360px; min-width: 0; }
+.sim input[type=range] { flex: 1 1 200px; accent-color: var(--accent); min-width: 0; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 11px; cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn.play[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.semtxt { font-family: var(--f-mono); font-size: .95rem; min-width: 8ch; }
+button:focus-visible, select:focus-visible, input:focus-visible, .prov:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Panel principal */
+.panel { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 22px; }
+@media (max-width: 860px) { .panel { grid-template-columns: minmax(0, 1fr); } }
+.estado { display: grid; gap: 16px; align-content: start; }
+.semaforo { background: var(--housing); border-radius: 60px; padding: 14px 18px; display: flex; gap: 14px; justify-content: center; width: fit-content; box-shadow: inset 0 2px 0 rgba(255,255,255,.06); }
+.luz { width: 58px; height: 58px; border-radius: 50%; opacity: .17; transition: opacity .35s, box-shadow .35s; }
+.luz.l0 { background: #2fbf71; color: #2fbf71; } .luz.l1 { background: #f5b82e; color: #f5b82e; } .luz.l2 { background: #f04848; color: #f04848; }
+.luz.on { opacity: 1; box-shadow: 0 0 26px 6px currentColor; }
+.veredicto { border-radius: 14px; padding: 16px 18px; color: #fff; display: grid; gap: 6px; }
+.veredicto .nivel { font-family: var(--f-display); font-size: 2.1rem; font-weight: 700; letter-spacing: .05em; line-height: 1; }
+.veredicto p { margin: 0; }
+.v0 { background: var(--ok); } .v1 { background: var(--warn); color: #1b1400; } .v2 { background: var(--crit); }
+.ultima { display: grid; gap: 2px; }
+.ultima .big { font-family: var(--f-display); font-size: 2.6rem; font-weight: 600; line-height: 1; }
+
+.derecha { display: grid; gap: 14px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--c, var(--line)); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.tile .sem { font-family: var(--f-mono); font-size: .74rem; color: var(--muted); }
+.tile .val { font-family: var(--f-display); font-size: 2rem; font-weight: 600; line-height: 1.05; }
+.tile .pct { font-size: .82rem; font-weight: 700; color: var(--c); }
+.tile .ic { font-size: .76rem; color: var(--muted); }
+.tile .real { font-size: .78rem; font-family: var(--f-mono); }
+
+.grafico { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 8px; position: relative; min-width: 0; }
+.grafico svg { width: 100%; height: auto; display: block; }
+.grafico text { fill: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .78rem; color: var(--muted); padding: 6px 4px 2px; }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.tt { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: .78rem; padding: 6px 9px; border-radius: 7px; white-space: nowrap; transform: translate(-50%, -110%); font-family: var(--f-mono); }
+
+.tabla-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .86rem; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { font-family: var(--f-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; }
+th:first-child, td:first-child { text-align: left; }
+.pill { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: .74rem; font-weight: 700; color: #fff; }
+.p0 { background: var(--ok); } .p1 { background: var(--warn); color: #1b1400; } .p2 { background: var(--crit); }
+
+section.bloque { display: grid; gap: 14px; }
+.bloque-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+.conteo { display: flex; gap: 16px; font-family: var(--f-mono); font-size: .85rem; }
+.provs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.prov { background: var(--surface); border: 1px solid var(--line); border-left: 7px solid var(--c); border-radius: 9px; padding: 10px 12px; cursor: pointer; text-align: left; display: grid; gap: 2px; }
+.prov:hover { border-color: var(--c); }
+.prov.sel { outline: 2px solid var(--accent); }
+.prov b { font-family: var(--f-display); font-size: 1.15rem; font-weight: 600; letter-spacing: .01em; }
+.prov small { color: var(--muted); font-size: .8rem; }
+
+.modelo { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 860px) { .modelo { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.kpis { display: flex; flex-wrap: wrap; gap: 18px 34px; margin-top: 12px; }
+.kpi .big { font-family: var(--f-display); font-size: 2.2rem; font-weight: 600; line-height: 1; }
+tr.best td { font-weight: 700; }
+
+.flujo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .flujo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.paso { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.paso .n { font-family: var(--f-mono); font-size: .72rem; color: var(--accent); }
+.paso b { font-family: var(--f-display); font-size: 1.2rem; font-weight: 600; }
+.paso p { margin: 0; font-size: .86rem; color: var(--muted); }
+.nota { font-size: .82rem; color: var(--muted); max-width: 95ch; }
+@media (prefers-reduced-motion: reduce) { .luz { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">DIRESA Ayacucho · Vigilancia epidemiológica de IRA</div>
+      <h1>Sistema de alerta temprana de IRA</h1>
+      <div class="sub">Pronóstico LSTM de los casos de las próximas 4 semanas, comparado con el canal endémico y convertido en semáforo.</div>
+    </div>
+    <div class="fuente">Fuente: MINSA – CDC Perú, datos abiertos<br>Último dato: <b id="ultimoDato"></b><br>Prototipo · IS-484 UNSCH</div>
+  </header>
+
+  <div class="controles" role="group" aria-label="Controles">
+    <div class="ctl"><label for="selAmbito">Ámbito</label><select id="selAmbito"></select></div>
+    <div class="ctl"><span class="lbl">Modo</span>
+      <div class="seg" role="group" aria-label="Modo">
+        <button id="mActual" aria-pressed="true">Pronóstico actual</button>
+        <button id="mSim" aria-pressed="false">Simulación histórica</button>
+      </div></div>
+    <div class="ctl sim" id="simBox" hidden>
+      <span class="lbl" style="flex-basis:100%">Última semana conocida</span>
+      <button class="btn" id="bPrev" aria-label="Semana anterior">◀</button>
+      <input type="range" id="rngSem" aria-label="Semana de análisis">
+      <button class="btn" id="bNext" aria-label="Semana siguiente">▶</button>
+      <span class="semtxt" id="semTxt"></span>
+      <button class="btn play" id="bPlay" aria-pressed="false">Reproducir</button>
+    </div>
+    <div class="ctl"><label for="selHist">Historia en el gráfico</label>
+      <select id="selHist" style="min-width:150px"><option value="52">1 año</option><option value="78" selected>1,5 años</option><option value="104">2 años</option><option value="156">3 años</option></select></div>
+  </div>
+
+  <div class="panel">
+    <div class="estado">
+      <div class="semaforo" aria-hidden="true"><div class="luz l0"></div><div class="luz l1"></div><div class="luz l2"></div></div>
+      <div class="veredicto" id="veredicto" role="status" aria-live="polite"></div>
+      <div class="ultima"><span class="eyebrow" id="ultLbl"></span><span class="big num" id="ultVal"></span></div>
+      <p class="nota" id="notaSim"></p>
+    </div>
+    <div class="derecha">
+      <div class="tiles" id="tiles"></div>
+      <div class="grafico" id="grafico">
+        <svg id="svg" viewBox="0 0 900 400" role="img" aria-label="Casos semanales, canal endémico y pronóstico"></svg>
+        <div class="leyenda">
+          <span><i class="sw" style="background:var(--real);height:3px"></i>Casos notificados</span>
+          <span><i class="sw" style="background:var(--accent);height:3px"></i>Pronóstico LSTM</span>
+          <span><i class="sw" style="background:var(--accent-soft)"></i>Intervalo 80 %</span>
+          <span id="lgReal" hidden><i class="sw" style="border-top:2px dashed var(--real);height:0"></i>Lo que ocurrió</span>
+          <span><i class="sw" style="background:var(--z-seg)"></i>Éxito / seguridad (≤ mediana)</span>
+          <span><i class="sw" style="background:var(--z-alarma)"></i>Alarma (mediana–Q3)</span>
+          <span><i class="sw" style="background:var(--z-epi)"></i>Epidemia (&gt; Q3)</span>
+        </div>
+        <div class="tt" id="tt" hidden></div>
+      </div>
+      <div class="tabla-wrap"><table id="tabla"></table></div>
+    </div>
+  </div>
+
+  <section class="bloque">
+    <div class="bloque-head"><h2>Semáforo por provincia</h2><div class="conteo" id="conteo"></div></div>
+    <div class="provs" id="provs"></div>
+    <p class="nota">Toca una provincia para verla en detalle. En provincias con pocos casos por semana, una variación pequeña cambia el nivel: léelo junto con el número de casos.</p>
+  </section>
+
+  <section class="bloque">
+    <div class="bloque-head"><h2>Desempeño del modelo</h2><span class="eyebrow">Prueba 2023 – 2024 · datos que el modelo no vio al entrenar</span></div>
+    <div class="modelo">
+      <div class="card">
+        <div class="tabla-wrap"><table id="tMet"></table></div>
+        <svg id="svgMae" viewBox="0 0 520 210" role="img" aria-label="MAE por horizonte" style="width:100%;height:auto;margin-top:10px"></svg>
+      </div>
+      <div class="card">
+        <div class="eyebrow">¿El semáforo acierta? · 2 semanas de anticipación</div>
+        <div class="kpis">
+          <div class="kpi"><div class="big num" id="kAcierto"></div><div class="muted">semanas con el nivel correcto</div></div>
+          <div class="kpi"><div class="big num" id="kSens"></div><div class="muted">semanas de alerta o emergencia que el sistema anticipó</div></div>
+        </div>
+        <p class="nota" style="margin-top:14px">MAE: error medio en casos por semana. RMSE: castiga más los errores grandes (picos). MAPE: error en porcentaje. Persistencia repite la última semana; el ingenuo estacional repite la misma semana del año anterior; SARIMA(1,0,1)(0,1,1)<sub>52</sub> es el modelo estadístico clásico.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloque">
+    <div class="bloque-head"><h2>Cómo funciona</h2><span class="eyebrow">Datos MINSA → tratamiento → LSTM → pronóstico → semáforo → tablero</span></div>
+    <div class="flujo">
+      <div class="paso"><span class="n">1 · pandas</span><b>Tratamiento de datos</b><p>Filtra Ayacucho, suma IRA no neumónica y neumonías por semana epidemiológica y arma 12 series: departamento y 11 provincias, 2000 – 2024.</p></div>
+      <div class="paso"><span class="n">2 · TensorFlow / Keras</span><b>Modelo LSTM</b><p>Mira las últimas 16 semanas y pronostica las 4 siguientes. LSTM(64) → LSTM(32) → Dense(4). Departamento: promedio de 5 redes.</p></div>
+      <div class="paso"><span class="n">3 · Python</span><b>Módulo de alertas</b><p>Canal endémico con cuartiles de 7 años (sin 2020 – 2021 por la pandemia). Verde ≤ mediana, amarillo hasta Q3, rojo sobre Q3.</p></div>
+      <div class="paso"><span class="n">4 · Streamlit</span><b>Tablero web</b><p>Gráfico, pronóstico y semáforo para la DIRESA y los puestos de salud. Esta página es su versión estática.</p></div>
+    </div>
+    <p class="nota">División temporal: entrenamiento 2000 – feb 2020 · excluido mar 2020 – 2021 (COVID-19) · validación 2022 · prueba 2023 – 2024. Intervalo de 80 % calculado con los errores del año de validación.</p>
+  </section>
+</div>
+
+<script>
+const D = /*__DATOS__*/null;
+const DEPTO = "AYACUCHO (departamento)";
+const NIV = [
+  { n: "NORMAL", msg: "Casos dentro de lo esperado para la época.", c: "var(--ok)" },
+  { n: "ALERTA", msg: "Casos por encima de la mediana histórica: reforzar vigilancia y stock.", c: "var(--warn)" },
+  { n: "EMERGENCIA", msg: "Casos por encima del tercer cuartil: activar plan de respuesta.", c: "var(--crit)" },
+];
+const cal = D.cal, N = D.meta.n_obs, O0 = D.meta.o0;
+const st = { amb: DEPTO, modo: "actual", t: N - 1, hist: 78, play: null };
+const fmt = v => Math.round(v).toLocaleString("es-PE");
+const etiqueta = i => `${cal.a[i]}-S${String(cal.s[i]).padStart(2, "0")}`;
+const fechaTxt = i => { const [y, m, d] = cal.f[i].split("-"); return `${d}/${m}/${y}`; };
+const MES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"];
+
+function canal(amb, i) { const c = D.canal[amb][String(cal.a[i])]; return c ? c[cal.s[i] - 1] : null; }
+function nivel(v, q) { return v > q[2] ? 2 : (v > q[1] ? 1 : 0); }
+function pronostico(amb, t) {
+  const p = D.pron[amb][t - O0], b = D.bandas[amb];
+  return p.map((v, h) => ({ i: t + h + 1, pred: v,
+    inf: Math.max(0, Math.expm1(Math.log1p(v) + b.inf[h])), sup: Math.expm1(Math.log1p(v) + b.sup[h]) }));
+}
+function evaluar(amb, t) {
+  const f = pronostico(amb, t);
+  f.forEach(r => { r.q = canal(amb, r.i); r.niv = nivel(r.pred, r.q); r.exc = 100 * (r.pred - r.q[1]) / r.q[1]; });
+  const ult = D.series[amb][t], media = f.reduce((s, r) => s + r.pred, 0) / f.length;
+  const cambio = ult > 0 ? 100 * (media - ult) / ult : 0;
+  return { f, niv: Math.max(...f.map(r => r.niv)), cambio, media,
+    tend: cambio > 10 ? "en aumento" : (cambio < -10 ? "en descenso" : "estable") };
+}
+
+// ---------- Controles
+const selA = document.getElementById("selAmbito");
+D.ambitos.forEach(a => { const o = document.createElement("option"); o.value = a;
+  o.textContent = a === DEPTO ? "Ayacucho · departamento" : titulo(a); selA.append(o); });
+function titulo(s) { return s.toLowerCase().replace(/(^|\s)\S/g, m => m.toUpperCase()); }
+selA.onchange = () => { st.amb = selA.value; render(); };
+const rng = document.getElementById("rngSem");
+rng.min = O0; rng.max = N - 2;
+const iDef = cal.f.findIndex((_, i) => etiqueta(i) === "2023-S13");
+rng.value = iDef > 0 ? iDef : N - 2;
+rng.oninput = () => { st.t = +rng.value; render(); };
+document.getElementById("bPrev").onclick = () => mover(-1);
+document.getElementById("bNext").onclick = () => mover(1);
+function mover(d) { st.t = Math.min(N - 2, Math.max(O0, st.t + d)); rng.value = st.t; render(); }
+document.getElementById("bPlay").onclick = e => {
+  if (st.play) { clearInterval(st.play); st.play = null; e.target.setAttribute("aria-pressed", "false"); e.target.textContent = "Reproducir"; return; }
+  e.target.setAttribute("aria-pressed", "true"); e.target.textContent = "Pausar";
+  st.play = setInterval(() => { if (st.t >= N - 2) { document.getElementById("bPlay").click(); return; } mover(1); }, 650);
+};
+function setModo(m) {
+  st.modo = m;
+  document.getElementById("mActual").setAttribute("aria-pressed", m === "actual");
+  document.getElementById("mSim").setAttribute("aria-pressed", m === "sim");
+  document.getElementById("simBox").hidden = m !== "sim";
+  document.getElementById("lgReal").hidden = m !== "sim";
+  st.t = m === "sim" ? +rng.value : N - 1;
+  if (m !== "sim" && st.play) document.getElementById("bPlay").click();
+  render();
+}
+document.getElementById("mActual").onclick = () => setModo("actual");
+document.getElementById("mSim").onclick = () => setModo("sim");
+document.getElementById("selHist").onchange = e => { st.hist = +e.target.value; render(); };
+document.getElementById("ultimoDato").textContent = D.meta.ultima;
+
+// ---------- Render
+function render() {
+  const amb = st.amb, t = st.t, ev = evaluar(amb, t), sim = st.modo === "sim";
+  const serie = D.series[amb];
+  document.getElementById("semTxt").textContent = etiqueta(t);
+  document.querySelectorAll(".luz").forEach((l, i) => l.classList.toggle("on", i === ev.niv));
+  const flecha = { "en aumento": "↗", "en descenso": "↘", "estable": "→" }[ev.tend];
+  const v = document.getElementById("veredicto");
+  v.className = `veredicto v${ev.niv}`;
+  v.innerHTML = `<span class="nivel">${NIV[ev.niv].n}</span><p>${NIV[ev.niv].msg}</p>
+    <p><b>Tendencia:</b> ${flecha} ${ev.tend} (${ev.cambio >= 0 ? "+" : ""}${ev.cambio.toFixed(0)} % frente a la última semana)</p>`;
+  document.getElementById("ultLbl").textContent = `Casos en ${etiqueta(t)} · ${amb === DEPTO ? "departamento" : titulo(amb)}`;
+  document.getElementById("ultVal").textContent = fmt(serie[t]);
+  document.getElementById("notaSim").textContent = sim
+    ? `Simulación: el sistema solo conoce los datos hasta ${etiqueta(t)} (${fechaTxt(t)}). La línea discontinua muestra lo que realmente ocurrió después.`
+    : `Pronóstico desde la última semana con datos (${etiqueta(t)}, inicio ${fechaTxt(t)}).`;
+
+  document.getElementById("tiles").innerHTML = ev.f.map((r, h) => {
+    const real = sim && r.i < N ? `<span class="real">real: ${fmt(serie[r.i])}</span>` : "";
+    return `<div class="tile" style="--c:${NIV[r.niv].c}">
+      <span class="sem">S+${h + 1} · ${etiqueta(r.i)}</span>
+      <span class="val num">${fmt(r.pred)}</span>
+      <span class="pct">${NIV[r.niv].n} · ${r.exc >= 0 ? "+" : ""}${r.exc.toFixed(0)} % vs mediana</span>
+      <span class="ic num">IC 80 %: ${fmt(r.inf)} – ${fmt(r.sup)}</span>${real}</div>`;
+  }).join("");
+
+  const filas = ev.f.map(r => {
+    const real = sim && r.i < N ? serie[r.i] : null;
+    return `<tr><td class="mono">${etiqueta(r.i)}</td><td>${fechaTxt(r.i)}</td><td><b>${fmt(r.pred)}</b></td>
+      <td>${fmt(r.inf)} – ${fmt(r.sup)}</td><td>${fmt(r.q[0])}</td><td>${fmt(r.q[1])}</td><td>${fmt(r.q[2])}</td>
+      <td><span class="pill p${r.niv}">${NIV[r.niv].n}</span></td>
+      ${sim ? `<td>${real === null ? "–" : fmt(real)}</td><td>${real ? ((r.pred - real) / real * 100).toFixed(0) + " %" : "–"}</td>` : ""}</tr>`;
+  }).join("");
+  document.getElementById("tabla").innerHTML = `<thead><tr><th>Semana</th><th>Inicio</th><th>Pronóstico</th><th>IC 80 %</th>
+    <th>Q1</th><th>Mediana</th><th>Q3</th><th>Nivel</th>${sim ? "<th>Real</th><th>Error</th>" : ""}</tr></thead><tbody>${filas}</tbody>`;
+
+  dibujar(amb, t, ev, sim);
+  provincias(t);
+  modelo(amb);
+}
+
+// ---------- Gráfico principal (SVG)
+function dibujar(amb, t, ev, sim) {
+  const svg = document.getElementById("svg"), W = 900, H = 400, m = { l: 52, r: 14, t: 14, b: 30 };
+  const serie = D.series[amb];
+  const i0 = Math.max(0, t - st.hist + 1), iFut = t + 4, iReal = sim ? Math.min(N - 1, t + 8) : t;
+  const i1 = Math.max(iFut, iReal);
+  const idx = []; for (let i = i0; i <= i1; i++) idx.push(i);
+  const qs = idx.map(i => canal(amb, i));
+  let ymax = Math.max(...qs.map(q => q[2]) , ...serie.slice(i0, iReal + 1), ...ev.f.map(r => r.sup)) * 1.12;
+  const paso = niceStep(ymax / 5); ymax = Math.ceil(ymax / paso) * paso;
+  const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
+  const y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  const area = (lo, hi) => "M" + idx.map((i, k) => `${x(i)},${y(hi(k))}`).join("L") + "L" +
+    idx.slice().reverse().map((i, k) => `${x(i)},${y(lo(idx.length - 1 - k))}`).join("L") + "Z";
+  let s = "";
+  for (let v = 0; v <= ymax; v += paso) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  s += `<path d="${area(k => 0, k => qs[k][0])}" fill="var(--z-exito)"/>`;
+  s += `<path d="${area(k => qs[k][0], k => qs[k][1])}" fill="var(--z-seg)"/>`;
+  s += `<path d="${area(k => qs[k][1], k => qs[k][2])}" fill="var(--z-alarma)"/>`;
+  s += `<path d="${area(k => qs[k][2], k => ymax)}" fill="var(--z-epi)"/>`;
+  s += `<path d="M${idx.map((i, k) => `${x(i)},${y(qs[k][1])}`).join("L")}" fill="none" stroke="var(--muted)" stroke-dasharray="3 4" stroke-width="1"/>`;
+  // ticks de mes
+  idx.forEach(i => { const [yy, mm, dd] = cal.f[i].split("-").map(Number);
+    if (dd <= 7 && (mm === 1 || mm === 4 || mm === 7 || mm === 10)) {
+      s += `<line x1="${x(i)}" x2="${x(i)}" y1="${H - m.b}" y2="${H - m.b + 5}" stroke="var(--muted)"/>`;
+      s += `<text x="${x(i)}" y="${H - 10}" text-anchor="middle">${MES[mm - 1]} ${mm === 1 ? yy : String(yy).slice(2)}</text>`; } });
+  // línea del presente
+  s += `<line x1="${x(t)}" x2="${x(t)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--muted)" stroke-dasharray="5 4"/>`;
+  s += `<text x="${x(t) - 6}" y="${m.t + 12}" text-anchor="end">${sim ? "hasta aquí conoce el modelo" : "último dato"}</text>`;
+  // banda y pronóstico
+  const pf = [{ i: t, pred: serie[t], inf: serie[t], sup: serie[t] }, ...ev.f];
+  s += `<path d="M${pf.map(r => `${x(r.i)},${y(r.sup)}`).join("L")}L${pf.slice().reverse().map(r => `${x(r.i)},${y(r.inf)}`).join("L")}Z" fill="var(--accent-soft)"/>`;
+  // casos reales
+  s += `<path d="M${idx.filter(i => i <= t).map(i => `${x(i)},${y(serie[i])}`).join("L")}" fill="none" stroke="var(--real)" stroke-width="2.2" stroke-linejoin="round"/>`;
+  if (sim) { const r = idx.filter(i => i >= t && i <= iReal);
+    s += `<path d="M${r.map(i => `${x(i)},${y(serie[i])}`).join("L")}" fill="none" stroke="var(--real)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+    r.slice(1).forEach(i => s += `<circle cx="${x(i)}" cy="${y(serie[i])}" r="3.5" fill="var(--surface)" stroke="var(--real)" stroke-width="1.5"/>`); }
+  s += `<path d="M${pf.map(r => `${x(r.i)},${y(r.pred)}`).join("L")}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
+  ev.f.forEach(r => s += `<circle cx="${x(r.i)}" cy="${y(r.pred)}" r="6" fill="${NIV[r.niv].c}" stroke="var(--surface)" stroke-width="2"/>`);
+  s += `<line id="cursor" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink)" stroke-opacity=".35" visibility="hidden"/>`;
+  s += `<rect id="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+  svg.innerHTML = s;
+
+  const tt = document.getElementById("tt"), hit = svg.querySelector("#hit"), cur = svg.querySelector("#cursor");
+  hit.onmousemove = e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
+    const i = Math.round(i0 + (px - m.l) / (W - m.l - m.r) * (i1 - i0));
+    if (i < i0 || i > i1) return;
+    const q = canal(amb, i), fr = ev.f.find(z => z.i === i);
+    let txt = `${etiqueta(i)} · mediana ${fmt(q[1])}`;
+    if (i <= t || (sim && i <= iReal)) txt += ` · real ${fmt(serie[i])}`;
+    if (fr) txt += ` · pronóstico ${fmt(fr.pred)}`;
+    tt.textContent = txt; tt.hidden = false;
+    const g = document.getElementById("grafico").getBoundingClientRect();
+    tt.style.left = (e.clientX - g.left) + "px"; tt.style.top = (e.clientY - g.top) + "px";
+    cur.setAttribute("x1", x(i)); cur.setAttribute("x2", x(i)); cur.setAttribute("visibility", "visible");
+  };
+  hit.onmouseleave = () => { tt.hidden = true; cur.setAttribute("visibility", "hidden"); };
+}
+function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+
+// ---------- Provincias
+function provincias(t) {
+  const lista = D.ambitos.filter(a => a !== DEPTO).map(a => ({ a, ev: evaluar(a, t) }))
+    .sort((p, q) => q.ev.niv - p.ev.niv || Math.max(...q.ev.f.map(r => r.exc)) - Math.max(...p.ev.f.map(r => r.exc)));
+  const cnt = [0, 0, 0]; lista.forEach(p => cnt[p.ev.niv]++);
+  document.getElementById("conteo").innerHTML =
+    `<span style="color:var(--crit)">● ${cnt[2]} emergencia</span><span style="color:var(--warn)">● ${cnt[1]} alerta</span><span style="color:var(--ok)">● ${cnt[0]} normal</span>`;
+  document.getElementById("provs").innerHTML = lista.map(({ a, ev }) =>
+    `<button class="prov${a === st.amb ? " sel" : ""}" style="--c:${NIV[ev.niv].c}" data-a="${a}">
+      <b>${titulo(a)}</b><small>${NIV[ev.niv].n} · ${etiqueta(t)}: ${fmt(D.series[a][t])} casos</small>
+      <small>pronóstico medio ${fmt(ev.media)} (${ev.cambio >= 0 ? "+" : ""}${ev.cambio.toFixed(0)} %, ${ev.tend})</small></button>`).join("");
+  document.querySelectorAll(".prov").forEach(b => b.onclick = () => { st.amb = b.dataset.a; selA.value = st.amb; render();
+    document.getElementById("grafico").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }); });
+}
+
+// ---------- Desempeño
+const COL = { "LSTM": "var(--accent)", "SARIMA": "#2a9d8f", "Persistencia": "#e08e2b", "Ingenuo estacional": "#98a2b0" };
+function modelo(amb) {
+  const M = D.metricas[amb], orden = ["LSTM", "SARIMA", "Persistencia", "Ingenuo estacional"].filter(k => M[k]);
+  const mejor = orden.reduce((b, k) => M[k].MAE < M[b].MAE ? k : b, orden[0]);
+  document.getElementById("tMet").innerHTML = `<thead><tr><th>Modelo · ${amb === DEPTO ? "departamento" : titulo(amb)}</th><th>MAE</th><th>RMSE</th><th>MAPE</th></tr></thead><tbody>` +
+    orden.map(k => `<tr class="${k === mejor ? "best" : ""}"><td><i class="sw" style="background:${COL[k]};margin-right:8px"></i>${k}</td><td>${M[k].MAE.toFixed(1)}</td><td>${M[k].RMSE.toFixed(1)}</td><td>${M[k].MAPE.toFixed(1)} %</td></tr>`).join("") + "</tbody>";
+  const svg = document.getElementById("svgMae"), W = 520, H = 210, m = { l: 40, r: 8, t: 18, b: 26 };
+  const vmax = Math.max(...orden.flatMap(k => M[k].porH)) * 1.1, paso = niceStep(vmax / 4), top = Math.ceil(vmax / paso) * paso;
+  const gw = (W - m.l - m.r) / 4, bw = (gw - 18) / orden.length, y = v => H - m.b - v / top * (H - m.t - m.b);
+  let s = `<text x="${m.l}" y="11" style="font-family:var(--f-mono);font-size:11px;fill:var(--muted)">MAE por semanas de anticipación</text>`;
+  for (let v = 0; v <= top; v += paso) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end" style="font-family:var(--f-mono);font-size:10px;fill:var(--muted)">${fmt(v)}</text>`;
+  for (let h = 0; h < 4; h++) {
+    orden.forEach((k, j) => { const xx = m.l + h * gw + 9 + j * bw, v = M[k].porH[h];
+      s += `<rect x="${xx}" y="${y(v)}" width="${bw - 2}" height="${y(0) - y(v)}" rx="2" fill="${COL[k]}"><title>${k}: ${v}</title></rect>`; });
+    s += `<text x="${m.l + h * gw + gw / 2}" y="${H - 8}" text-anchor="middle" style="font-family:var(--f-mono);font-size:11px;fill:var(--muted)">${h + 1} sem.</text>`;
+  }
+  svg.innerHTML = s;
+  document.getElementById("kAcierto").textContent = D.eval[amb].acierto + " %";
+  document.getElementById("kSens").textContent = D.eval[amb].sens + " %";
+}
+
+render();
+</script>

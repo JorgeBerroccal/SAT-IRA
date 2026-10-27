@@ -1,0 +1,7 @@
+tensorflow>=2.16
+pandas>=2.0
+numpy>=1.24
+statsmodels>=0.14
+streamlit>=1.50
+plotly>=5.20
+matplotlib>=3.7
