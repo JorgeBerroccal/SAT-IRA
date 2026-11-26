@@ -1,0 +1,21 @@
+ambito,modelo,semilla,epocas,MAE
+AYACUCHO (departamento),LSTM sin temperatura,1,68,142.80268028939125
+AYACUCHO (departamento),LSTM sin temperatura,2,41,144.67935815187965
+AYACUCHO (departamento),LSTM sin temperatura,3,86,144.36735670637376
+AYACUCHO (departamento),LSTM sin temperatura,4,41,137.29381735017984
+AYACUCHO (departamento),LSTM sin temperatura,5,43,141.54287190956646
+AYACUCHO (departamento),LSTM con temperatura,1,59,141.08759662892558
+AYACUCHO (departamento),LSTM con temperatura,2,54,144.6142563017288
+AYACUCHO (departamento),LSTM con temperatura,3,59,145.02032183656598
+AYACUCHO (departamento),LSTM con temperatura,4,45,139.9863427794806
+AYACUCHO (departamento),LSTM con temperatura,5,45,137.71222694321435
+LUCANAS,LSTM sin temperatura,1,54,32.33230207462122
+LUCANAS,LSTM sin temperatura,2,54,33.847318573753434
+LUCANAS,LSTM sin temperatura,3,54,32.41438291568567
+LUCANAS,LSTM sin temperatura,4,54,34.13261679847642
+LUCANAS,LSTM sin temperatura,5,41,32.68404660366549
+LUCANAS,LSTM con temperatura,1,53,34.56608604204537
+LUCANAS,LSTM con temperatura,2,41,34.089447418061816
+LUCANAS,LSTM con temperatura,3,54,33.82865824557767
+LUCANAS,LSTM con temperatura,4,38,33.60878102142032
+LUCANAS,LSTM con temperatura,5,41,34.10478465391858

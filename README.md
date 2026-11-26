@@ -83,8 +83,16 @@ Intervalo de 80 % a partir de los errores del año de validación.
 **Alertas.** Canal endémico por cuartiles (Bortman, 1999) de los 7 años previos, sin 2020-2021, suavizado con ±1 semana.
 🟢 pronóstico ≤ mediana · 🟡 entre mediana y Q3 · 🔴 > Q3. Nivel global = el peor de las 4 semanas.
 
-**Temperatura SENAMHI.** No está incluida porque esos datos no venían en los archivos. El código ya está preparado:
-si la serie trae una columna `tmin`, `caracteristicas()` la agrega como variable de entrada (hay que reentrenar).
+**Temperatura SENAMHI.** Estación PUQUIO (provincia de Lucanas), archivo `data/qc00000736_puquio.txt`,
+datos diarios del 24/11/1962 al 30/06/2014 (de 2000 a 2013 solo faltan 2 de 5 114 días de temperatura mínima).
+Como no hay datos después de junio de 2014, la temperatura **no entra al sistema principal** (prueba 2023-2024);
+se evalúa aparte, en 2000-2013:
+
+```bash
+python analisis_temperatura.py data/qc00000736_puquio.txt   # H1: correlación   (~5 s)
+python experimento_temperatura.py                           # H3: LSTM con/sin   (~5 min)
+```
+Resultados en `resultados/temperatura/`. La estación de Pauza se descartó: tiene huecos grandes en 2012-2014.
 
 ---
 
@@ -113,6 +121,25 @@ frente a persistencia e ingenuo estacional (`resultados/metricas_prueba.csv`).
 Limitación: la ventaja de la LSTM sobre SARIMA es moderada (≈ 5 % en MAE) y crece con el horizonte; ningún modelo
 anticipa el inicio de un brote súbito sin señal previa en los datos (p. ej. marzo 2023).
 
+### Temperatura mínima (Puquio, 2000-2013)
+
+**H1 — correlación** (730 semanas; IC 95 % por bootstrap circular de bloques de 52 semanas):
+
+| Ámbito | Pearson directo (rezago 0) | Spearman | Pearson sin estacionalidad (anomalías) |
+|---|---:|---:|---:|
+| Departamento | −0.41 [−0.54; −0.32] | −0.42 | 0.00 [−0.12; 0.11] |
+| Lucanas | −0.37 [−0.47; −0.28] | −0.39 | −0.10 [−0.18; −0.00] |
+
+**H3 — LSTM con y sin temperatura** (entrenamiento hasta 2010, validación 2011, prueba 2012-2013; ensamble de 5 semillas):
+
+| Ámbito | MAE sin temperatura | MAE con temperatura | Diebold-Mariano |
+|---|---:|---:|---|
+| Departamento | 141.2 | 141.0 | sin diferencia (p ≥ 0.32 en los 4 horizontes) |
+| Lucanas | 32.8 | 33.8 | con temperatura peor a 4 semanas (p = 0.016); sin diferencia en 1-3 |
+
+La relación negativa existe, pero se explica casi entera por el ciclo anual, que el modelo ya recibe con el seno y el
+coseno de la semana; por eso agregar la temperatura no reduce el error.
+
 ---
 
 ## 5. Estructura
@@ -123,9 +150,11 @@ sistema_alerta_ira/
 ├── entrenar.py                 pipeline: datos → entrenamiento → evaluación → pronósticos
 ├── generar_figuras.py          figuras del informe
 ├── exportar_web.py             genera web/tablero_estatico.html
-├── src/  tratamiento.py · modelo_lstm.py · alertas.py · baselines.py
-├── data/series_semanales_ayacucho.csv
+├── analisis_temperatura.py     H1: temperatura mínima vs. casos (2000-2013)
+├── experimento_temperatura.py  H3: LSTM con y sin temperatura (2000-2013)
+├── src/  tratamiento.py · modelo_lstm.py · alertas.py · baselines.py · temperatura.py
+├── data/series_semanales_ayacucho.csv · qc00000736_puquio.txt (SENAMHI)
 ├── modelos/  lstm_departamento_s1..s5.keras · lstm_provincias.keras · escaladores.json · info_modelo.json
-├── resultados/  metricas_prueba.csv · pronosticos_*.csv · historial_entrenamiento.csv · figuras/
+├── resultados/  metricas_prueba.csv · pronosticos_*.csv · historial_entrenamiento.csv · figuras/ · temperatura/
 └── web/  tablero_estatico.html · plantilla.html
 ```

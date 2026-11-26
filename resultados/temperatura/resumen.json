@@ -1,0 +1,16 @@
+{
+  "estacion": "PUQUIO (SENAMHI, qc00000736)",
+  "periodo_diario_archivo": "24/11/1962 - 30/06/2014",
+  "dias_2000_2013": 5114,
+  "dias_sin_tmin_2000_2013": 2,
+  "semanas_2000_2013": 730,
+  "semanas_interpoladas": 0,
+  "semanas_sin_dato": 0,
+  "tmin_semanal_media": 4.83,
+  "tmin_semanal_min": 0.29,
+  "tmin_semanal_max": 9.23,
+  "semana_mas_fria_promedio": 29,
+  "tmin_semana_mas_fria": 2.16,
+  "semana_mas_casos_promedio_AYACUCHO (departamento)": 24,
+  "semana_mas_casos_promedio_LUCANAS": 23
+}
