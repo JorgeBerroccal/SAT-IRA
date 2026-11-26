@@ -29,7 +29,9 @@ python -m venv .venv
 pip install -r requirements.txt
 streamlit run app.py
 ```
-Se abre en el navegador (http://localhost:8501). En Windows también puedes hacer doble clic en `iniciar.bat`.
+Se abre en el navegador (http://localhost:8501).
+Abre en la **vista simple** (semáforo, qué hacer, próximas 4 semanas y estado de las provincias). El interruptor
+**Vista técnica** (arriba a la derecha) muestra el tablero completo: simulación histórica, métricas, datos y explicación del modelo. En Windows también puedes hacer doble clic en `iniciar.bat`.
 
 **Los modelos ya vienen entrenados** (carpeta `modelos/`), así que no hace falta volver a entrenar para presentar.
 Si TensorFlow no se instala en tu PC, el tablero igual funciona: usa los pronósticos precalculados en

@@ -38,7 +38,7 @@ st.set_page_config(page_title="Alerta temprana IRA · Ayacucho", page_icon="🫁
 
 st.markdown("""
 <style>
-.block-container {padding-top: 1.6rem; padding-bottom: 2rem;}
+.block-container {padding-top: 3rem; padding-bottom: 2rem;}
 .semaforo {display:flex; gap:14px; align-items:center; background:#20262e; padding:14px 18px;
            border-radius:40px; width:fit-content; margin:auto;}
 .luz {width:54px; height:54px; border-radius:50%; opacity:.18;}
@@ -50,6 +50,14 @@ st.markdown("""
        background:rgba(127,127,127,.08);}
 .prov b {font-size:.95rem;}
 .prov small {opacity:.8;}
+.aviso {border-radius:16px; padding:22px 26px; color:white; margin:.4rem 0 1rem 0;}
+.aviso .nivel {font-size:2.3rem; font-weight:800; letter-spacing:.05em; line-height:1.1;}
+.aviso p {margin:.5rem 0 0 0; font-size:1.15rem;}
+.semana {border-radius:12px; padding:12px 14px; border-top:6px solid; background:rgba(127,127,127,.08);}
+.semana .f {font-size:.9rem; opacity:.8;}
+.semana .n {font-size:1.8rem; font-weight:700; line-height:1.2;}
+.chip {display:inline-block; border-radius:20px; padding:6px 12px; margin:0 6px 8px 0;
+       background:rgba(127,127,127,.10); font-size:.95rem;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -106,48 +114,67 @@ motor_vivo = modelos is not None
 # ---------------------------------------------------------------------------
 # Barra lateral
 # ---------------------------------------------------------------------------
-with st.sidebar:
-    st.markdown("## 🫁 Alerta temprana IRA")
-    st.caption("DIRESA Ayacucho · Prototipo IS-484")
+cab_izq, cab_der = st.columns([5, 1])
+with cab_der:
+    vista_tecnica = st.toggle("Vista técnica", value=False,
+                              help="Muestra el detalle del modelo, la simulación histórica, las métricas y "
+                                   "los datos. Pensada para la exposición.")
 
+if vista_tecnica:
+    with st.sidebar:
+        st.markdown("## 🫁 Alerta temprana IRA")
+        st.caption("DIRESA Ayacucho · Prototipo IS-484")
+
+        subido = None
+        with st.expander("📤 Actualizar con nuevo CSV del MINSA"):
+            archivo = st.file_uploader("CSV de vigilancia de IRA (formato datos abiertos)", type=["csv"])
+            if archivo is not None:
+                if motor_vivo:
+                    subido = procesar_csv_subido(archivo.getvalue())
+                    st.success(f"Datos cargados hasta {subido['semana_txt'].iloc[-1]}")
+                else:
+                    st.warning("Para pronosticar con datos nuevos se necesita TensorFlow instalado.")
+        if subido is not None:
+            series = subido
+
+        ambitos = [DEPTO] + sorted(a for a in series["ambito"].unique() if a != DEPTO)
+        ambito = st.selectbox("Ámbito", ambitos, index=0)
+        serie = series[series["ambito"] == ambito].reset_index(drop=True)
+
+        modo = st.radio("Modo", ["Pronóstico actual", "Simulación histórica"],
+                        help="En simulación se elige una semana del pasado: el sistema solo usa los datos "
+                             "hasta esa semana y luego se compara con lo que realmente ocurrió.")
+        etiquetas = serie["semana_txt"].tolist()
+        if modo == "Pronóstico actual":
+            idx_origen = len(serie) - 1
+        else:
+            candidatas = etiquetas[VENTANA - 1: len(etiquetas) - 1]
+            defecto = candidatas.index("2023-S13") if "2023-S13" in candidatas else len(candidatas) - 1
+            sel = st.select_slider("Última semana conocida", options=candidatas, value=candidatas[defecto])
+            idx_origen = etiquetas.index(sel)
+
+        st.divider()
+        semanas_hist = st.slider("Semanas de historia en el gráfico", 26, 260, 78, step=26)
+        n_anios = st.slider("Años de referencia del canal endémico", 5, 7, 7)
+        st.divider()
+        if motor_vivo:
+            st.success(f"Motor LSTM activo · {len(modelos['departamento'])} redes (depto.) + 1 red provincial",
+                       icon="🧠")
+        else:
+            st.info("Motor LSTM no disponible (sin TensorFlow): usando pronósticos precalculados.", icon="💾")
+        st.caption(f"Datos: MINSA – CDC Perú, vigilancia de IRA. Último dato: **{etiquetas[-1]}**")
+else:
     subido = None
-    with st.expander("📤 Actualizar con nuevo CSV del MINSA"):
-        archivo = st.file_uploader("CSV de vigilancia de IRA (formato datos abiertos)", type=["csv"])
-        if archivo is not None:
-            if motor_vivo:
-                subido = procesar_csv_subido(archivo.getvalue())
-                st.success(f"Datos cargados hasta {subido['semana_txt'].iloc[-1]}")
-            else:
-                st.warning("Para pronosticar con datos nuevos se necesita TensorFlow instalado.")
-    if subido is not None:
-        series = subido
-
     ambitos = [DEPTO] + sorted(a for a in series["ambito"].unique() if a != DEPTO)
-    ambito = st.selectbox("Ámbito", ambitos, index=0)
+    nombres = {a: ("Todo el departamento de Ayacucho" if a == DEPTO else f"Provincia de {a.title()}") for a in ambitos}
+    with cab_izq:
+        st.markdown("# Alerta de infecciones respiratorias (IRA) · Ayacucho")
+        ambito = st.selectbox("¿Qué lugar quiere ver?", ambitos, format_func=lambda a: nombres[a])
     serie = series[series["ambito"] == ambito].reset_index(drop=True)
-
-    modo = st.radio("Modo", ["Pronóstico actual", "Simulación histórica"],
-                    help="En simulación se elige una semana del pasado: el sistema solo usa los datos "
-                         "hasta esa semana y luego se compara con lo que realmente ocurrió.")
     etiquetas = serie["semana_txt"].tolist()
-    if modo == "Pronóstico actual":
-        idx_origen = len(serie) - 1
-    else:
-        candidatas = etiquetas[VENTANA - 1: len(etiquetas) - 1]
-        defecto = candidatas.index("2023-S13") if "2023-S13" in candidatas else len(candidatas) - 1
-        sel = st.select_slider("Última semana conocida", options=candidatas, value=candidatas[defecto])
-        idx_origen = etiquetas.index(sel)
-
-    st.divider()
-    semanas_hist = st.slider("Semanas de historia en el gráfico", 26, 260, 78, step=26)
-    n_anios = st.slider("Años de referencia del canal endémico", 5, 7, 7)
-    st.divider()
-    if motor_vivo:
-        st.success(f"Motor LSTM activo · {len(modelos['departamento'])} redes (depto.) + 1 red provincial",
-                   icon="🧠")
-    else:
-        st.info("Motor LSTM no disponible (sin TensorFlow): usando pronósticos precalculados.", icon="💾")
-    st.caption(f"Datos: MINSA – CDC Perú, vigilancia de IRA. Último dato: **{etiquetas[-1]}**")
+    modo = "Pronóstico actual"
+    idx_origen = len(serie) - 1
+    semanas_hist, n_anios = 26, 7
 
 
 # ---------------------------------------------------------------------------
@@ -191,6 +218,97 @@ def alerta_para(amb: str, s: pd.DataFrame, t: int):
 
 fut, res = alerta_para(ambito, serie, idx_origen)
 ultima = serie.iloc[idx_origen]
+
+MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "set", "oct", "nov", "dic"]
+
+
+def rango_semana(f) -> str:
+    fin = f + pd.Timedelta(days=6)
+    return f"{f.day} {MESES[f.month - 1]} – {fin.day} {MESES[fin.month - 1]} {fin.year}"
+
+
+TEXTO = {
+    0: ("Los casos de las próximas 4 semanas estarán dentro de lo habitual para esta época del año.",
+        "Mantener la vigilancia de rutina."),
+    1: ("Se esperan más casos de lo habitual para esta época del año.",
+        "Reforzar la vigilancia y revisar el stock de medicamentos y oxígeno."),
+    2: ("Se esperan muchos más casos de lo habitual para esta época del año.",
+        "Activar el plan de respuesta."),
+}
+
+
+def vista_simple():
+    det = res["detalle"]
+    color = res["color"]
+    frase, accion = TEXTO[res["nivel_id"]]
+    ultima_casos = int(ultima["casos"])
+    media = fut["pred"].mean()
+    tendencia = {"en aumento": "están subiendo", "en descenso": "están bajando", "estable": "se mantienen estables"}[res["tendencia"]]
+    oscuro = "#1b1400" if res["nivel_id"] == 1 else "white"
+    st.markdown(
+        f'<div class="aviso" style="background:{color}; color:{oscuro}">'
+        f'<div class="nivel">{res["emoji"]} {res["nivel"]}</div>'
+        f'<p>{frase}</p><p><b>Qué hacer:</b> {accion}</p></div>', unsafe_allow_html=True)
+    st.markdown(f"Los casos **{tendencia}**: la última semana con datos hubo **{ultima_casos:,}** casos "
+                f"y se esperan unos **{media:,.0f} por semana** en el próximo mes.".replace(",", " "))
+
+    st.markdown("#### Próximas 4 semanas")
+    cols = st.columns(HORIZONTE)
+    for col, (_, r), (_, f) in zip(cols, det.iterrows(), fut.iterrows()):
+        c = NIVELES[int(r["nivel_id"])]["color"]
+        col.markdown(f'<div class="semana" style="border-color:{c}"><div class="f">{rango_semana(f["fecha"])}</div>'
+                     f'<div class="n">{r["pred"]:,.0f}</div><div>casos · {r["emoji"]} {r["nivel"].lower()}</div></div>'
+                     .replace(",", " "), unsafe_allow_html=True)
+
+    # Gráfico sencillo: últimos 6 meses + pronóstico, con lo habitual y el límite de emergencia
+    ini = max(0, idx_origen - semanas_hist + 1)
+    hist_v = serie.iloc[ini: idx_origen + 1]
+    eje = pd.concat([hist_v[["fecha", "anio", "semana"]], fut[["fecha", "anio", "semana"]]])
+    can = pd.concat([canal(ambito, a, serie, n_anios, len(serie)) for a in sorted(eje["anio"].unique())])
+    z = eje.merge(can, on=["anio", "semana"], how="left")
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=z["fecha"], y=z["q3"], name="Nivel de emergencia", mode="lines",
+                             line=dict(color=NIVELES[2]["color"], dash="dash", width=1.5),
+                             hovertemplate="%{y:,.0f}<extra>Nivel de emergencia</extra>"))
+    fig.add_trace(go.Scatter(x=z["fecha"], y=z["q2"], name="Lo habitual para la época", mode="lines",
+                             line=dict(color=NIVELES[0]["color"], dash="dot", width=1.5),
+                             hovertemplate="%{y:,.0f}<extra>Lo habitual</extra>"))
+    fig.add_trace(go.Scatter(x=hist_v["fecha"], y=hist_v["casos"], name="Casos registrados", mode="lines+markers",
+                             line=dict(color=COLOR_REAL, width=2.6), marker=dict(size=4),
+                             hovertemplate="%{y:,.0f} casos<extra></extra>"))
+    xf = [ultima["fecha"]] + fut["fecha"].tolist()
+    fig.add_trace(go.Scatter(x=xf, y=[ultima["casos"]] + fut["pred"].tolist(), name="Casos esperados",
+                             mode="lines+markers", line=dict(color=COLOR_PRED, width=3, dash="dash"),
+                             marker=dict(size=[0] + [10] * HORIZONTE,
+                                         color=["rgba(0,0,0,0)"] + [NIVELES[int(i)]["color"] for i in det["nivel_id"]]),
+                             hovertemplate="%{y:,.0f} casos esperados<extra></extra>"))
+    fig.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10), hovermode="x unified",
+                      yaxis=dict(title="Casos por semana", rangemode="tozero"),
+                      legend=dict(orientation="h", y=-0.15))
+    st.markdown("#### Últimos 6 meses y lo que se espera")
+    st.plotly_chart(fig, width="stretch")
+
+    if ambito == DEPTO:
+        st.markdown("#### ¿Cómo están las provincias?")
+        filas = []
+        for amb in ambitos[1:]:
+            s = series[series["ambito"] == amb].reset_index(drop=True)
+            _, r = alerta_para(amb, s, len(s) - 1)
+            filas.append((r["nivel_id"], amb, r["emoji"]))
+        filas.sort(key=lambda x: (-x[0], x[1]))
+        st.markdown("".join(f'<span class="chip">{e} {a.title()}</span>' for _, a, e in filas),
+                    unsafe_allow_html=True)
+        st.caption("En las provincias con pocos casos por semana, un cambio pequeño puede cambiar el color.")
+
+    st.divider()
+    st.caption(f"Datos del MINSA (vigilancia de IRA) hasta la semana del {rango_semana(ultima['fecha'])}. "
+               "Pronóstico con redes neuronales LSTM. Para ver el detalle del modelo, active **Vista técnica** "
+               "arriba a la derecha.")
+
+
+if not vista_tecnica:
+    vista_simple()
+    st.stop()
 
 # ---------------------------------------------------------------------------
 # Encabezado
